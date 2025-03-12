@@ -16,7 +16,7 @@ print(repo_id)
 api = HfApi()
 
 # 上传文件夹到拼接后的 repo_id
-api.upload_folder(
+api.upload_large_folder(
     folder_path="./data",
     repo_id=repo_id,
     repo_type="dataset",
