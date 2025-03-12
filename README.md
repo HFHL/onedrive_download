@@ -140,37 +140,21 @@ python onedrive_downloader_shared.py
 会告诉你用什么命令，然后对应的驱动器id和项目id，
 
 然后退出程序，运行
-python onedrive_downloader_shared.py
 
-然后输入2
+将对应的驱动id和项目id写在代码里指定的地方，然后运行：
 
-```
-(base) root@autodl-container-322649a1f3-69f8bbcd:~/autodl-tmp/one_drive/onedrive_download# python onedrive_downloader_shared.py
-请输入共享项目的信息:
-1. 只输入项目ID
-2. 输入驱动器ID和项目ID
-请选择输入方式 (1/2): b!mxLvO8_fT0WFEgKhZ6yFsfp19tyWN7ZAoE_IwT5dSt66L5RtyWF7TIFo9ewM8e4a
-无效的选择
-(base) root@autodl-container-322649a1f3-69f8bbcd:~/autodl-tmp/one_drive/onedrive_download# python onedrive_downloader_shared.py
-请输入共享项目的信息:
-1. 只输入项目ID
-2. 输入驱动器ID和项目ID
-请选择输入方式 (1/2): 2
-请输入驱动器ID: b!mxLvO8_fT0WFEgKhZ6yFsfp19tyWN7ZAoE_IwT5dSt66L5RtyWF7TIFo9ewM8e4a
-请输入项目ID: 01HVJG3G6TO3PQXJAPGZD36OIWYWMW36YB
-正在处理共享项目: WavText5K (驱动器ID: b!mxLvO8_fT0WFEgKhZ6yFsfp19tyWN7ZAoE_IwT5dSt66L5RtyWF7TIFo9ewM8e4a, 项目ID: 01HVJG3G6TO3PQXJAPGZD36OIWYWMW36YB)
-正在处理共享项目: test (驱动器ID: b!mxLvO8_fT0WFEgKhZ6yFsfp19tyWN7ZAoE_IwT5dSt66L5RtyWF7TIFo9ewM8e4a, 项目ID: 01HVJG3GZMNGXARPJS3FGJWP67ICBROF2G)
-正在下载: 0.tar (470.45 MB)
-```
+nohup python onedrive_downloader_shared.py
 
-
-把对应的驱动id和项目id输入进去，就会开始下载。
 
 下载好以后，将主目录下的：
-step1
-step2
-step3
+step1_unzip.py
+step2_generate_parquet.py
+step3_upload_data.py
+
 复制到数据目录下，也就是放到和train test valid同一个目录。
+
+!!这一步很重要，必须cd 到数据集的目录，而不是主目录，也就是必须cd 到train test valid同目录。
+
 
 然后step1，直接run
 python step1_unzip.py

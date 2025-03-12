@@ -233,54 +233,18 @@ def main():
     try:
         downloader = OneDriveSharedDownloader()
         
-        # 检查命令行参数
-        if len(sys.argv) > 2:
-            # 如果提供了两个参数，假设是驱动器ID和项目ID
-            drive_id = sys.argv[1]
-            item_id = sys.argv[2]
-            print(f"使用命令行参数 - 驱动器ID: {drive_id}, 项目ID: {item_id}")
-            
-            # 验证项目ID
-            item_info = downloader.get_item_info(item_id, drive_id)
-            if not item_info:
-                print(f"无法获取项目信息，请确认ID是否正确 - 驱动器ID: {drive_id}, 项目ID: {item_id}")
-                return
-            
-            # 开始下载
-            downloader.download_folder(item_id, drive_id)
-        else:
-            # 交互式输入
-            print("请输入共享项目的信息:")
-            print("1. 只输入项目ID")
-            print("2. 输入驱动器ID和项目ID")
-            choice = input("请选择输入方式 (1/2): ").strip()
-            
-            if choice == "1":
-                item_id = input("请输入要下载的共享项目ID: ")
-                
-                # 验证项目ID
-                item_info = downloader.get_item_info(item_id)
-                if not item_info:
-                    print(f"无法获取项目信息，请确认ID是否正确: {item_id}")
-                    return
-                
-                # 开始下载
-                downloader.download_folder(item_id)
-            elif choice == "2":
-                drive_id = input("请输入驱动器ID: ")
-                item_id = input("请输入项目ID: ")
-                
-                # 验证项目ID
-                item_info = downloader.get_item_info(item_id, drive_id)
-                if not item_info:
-                    print(f"无法获取项目信息，请确认ID是否正确 - 驱动器ID: {drive_id}, 项目ID: {item_id}")
-                    return
-                
-                # 开始下载
-                downloader.download_folder(item_id, drive_id)
-            else:
-                print("无效的选择")
-                return
+        # 在这里直接设置驱动器ID和项目ID
+        drive_id = "b!mxLvO8_fT0WFEgKhZ6yFsfp19tyWN7ZAoE_IwT5dSt66L5RtyWF7TIFo9ewM8e4a"
+        item_id = "01HVJG3GZDNHA4JPPO7FFKWKBOTBA22VU2"
+        
+        # 验证项目ID
+        item_info = downloader.get_item_info(item_id, drive_id)
+        if not item_info:
+            print(f"无法获取项目信息，请确认ID是否正确 - 驱动器ID: {drive_id}, 项目ID: {item_id}")
+            return
+        
+        # 开始下载
+        downloader.download_folder(item_id, drive_id)
         
         print("所有文件下载完成！")
     except Exception as e:
