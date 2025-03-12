@@ -1,10 +1,16 @@
-# Microsoft Azure应用程序凭据
-CLIENT_ID = "5e4fc304-e251-423b-afca-69fc6fbe093b"  # 应用程序(客户端)ID，从Azure门户获取
-CLIENT_SECRET = "P-e8Q~nqnveuvTKFoY9sq6bNTZKVmnBdBr_ygaS6"  # 客户端密钥，从Azure门户的"证书和密钥"部分创建
-TENANT_ID = "464ca498-fc9a-4f5a-83dd-3ccbd135965c"  # 租户ID，使用"common"可以支持个人和组织账户
+import os
+from dotenv import load_dotenv
 
-# 重定向URI - 必须与Azure门户中注册的完全一致
-REDIRECT_URI = "http://localhost"  # 必须与Azure门户中配置的重定向URI完全匹配
+# 加载环境变量
+load_dotenv()
+
+# Microsoft Azure应用程序凭据
+CLIENT_ID = os.getenv("CLIENT_ID")  # 应用程序(客户端)ID
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")  # 客户端密钥
+TENANT_ID = os.getenv("TENANT_ID")  # 租户ID
+
+# 重定向URI
+REDIRECT_URI = os.getenv("REDIRECT_URI")  # 重定向URI
 
 # Microsoft Graph API端点
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
