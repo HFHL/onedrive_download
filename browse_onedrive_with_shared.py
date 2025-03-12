@@ -330,19 +330,32 @@ class OneDriveBrowser:
                             input("按Enter键继续...")
                     else:
                         # 选择普通文件夹
-                        if 0 <= item_index < len(folders):
-                            folder_name = folders[item_index]["name"]
-                            folder_id = folders[item_index]["id"]
+                        if not folders:
+                            print("当前目录下没有文件夹")
+                            input("按Enter键继续...")
+                            continue
+                            
+                        # 获取排序后的文件夹列表
+                        sorted_folders = sorted(folders, key=lambda x: x["name"])
+                        folders_count = len(sorted_folders)
+                        
+                        if item_index >= folders_count:
+                            print(f"错误：找不到编号 {item_index + 1} 的文件夹")
+                            print(f"当前文件夹数量为: {folders_count}")
+                            input("按Enter键继续...")
+                        elif 0 <= item_index < folders_count:
+                            selected_folder = sorted_folders[item_index]
+                            folder_name = selected_folder["name"]
+                            folder_id = selected_folder["id"]
                             
                             if is_in_shared_items:
                                 # 在共享项目中导航
                                 if current_remote_item:
                                     # 如果当前是remoteItem，则更新remoteItem
-                                    new_remote_item = folders[item_index]
-                                    if "remoteItem" in new_remote_item:
-                                        current_remote_item = new_remote_item["remoteItem"]
+                                    if "remoteItem" in selected_folder:
+                                        current_remote_item = selected_folder["remoteItem"]
                                     else:
-                                        current_remote_item = new_remote_item
+                                        current_remote_item = selected_folder
                                 else:
                                     # 否则更新shared_item_id
                                     current_shared_item_id = folder_id
