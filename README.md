@@ -1,84 +1,208 @@
 # OneDrive下载助手 - 简单好用的文件下载工具 📥
 
-## 这是个啥？🤔
+# 第一步
+找到非鱼子，他会给你一些东西。
 
-这是一个超级好用的OneDrive文件下载工具，主要有这些功能：
-1. 可以下载你自己OneDrive里的任何文件和文件夹
-2. 可以下载别人分享给你的OneDrive文件
-3. 提供了一个交互式的文件浏览器，让你可以像在Windows资源管理器一样浏览文件
-4. 支持断点续传，下载中断了也不怕
+# 第二步
+在当前目录创建./env文件，把非鱼子给你的东西粘贴进去。
 
-## 主要文件说明 📁
+# 第三步
 
-- `onedrive_downloader.py`: 下载你自己OneDrive里的文件
-- `onedrive_downloader_shared.py`: 下载别人分享给你的文件
-- `browse_onedrive_with_shared.py`: 交互式文件浏览器，可以浏览文件结构
-- `config.py`: 配置文件，存放一些重要的设置
+运行命令
 
-## 怎么用？🚀
 
-### 第一步：准备工作
-
-1. 确保你的电脑上安装了Python（版本3.6或更高）
-2. 安装需要的Python包：
-   ```bash
-   pip install msal requests python-dotenv
-   ```
-3. 在Azure门户注册一个应用（这个有点专业，如果不会弄可以问老师要现成的）
-
-### 第二步：配置
-
-1. 创建一个`.env`文件，填入这些信息：
-   ```
-   CLIENT_ID=你的应用ID
-   TENANT_ID=你的租户ID
-   ```
-
-### 第三步：开始使用
-
-#### 方式一：用文件浏览器（推荐新手用这个）
-```bash
-python browse_onedrive_with_shared.py
 ```
-这个会打开一个交互式界面，你可以：
-- 用`cd 数字`进入文件夹
-- 用`cd ..`返回上一级
-- 用`shared`查看别人分享给你的文件
-- 用`home`回到你的OneDrive根目录
-- 用`download`下载当前文件夹
-
-#### 方式二：直接下载指定文件夹
-```bash
-python onedrive_downloader.py
+python browse_onedrive_with_shared.py 
 ```
-然后输入你想下载的文件夹路径就行
 
-#### 方式三：下载分享文件
-```bash
+如果是第一次运行，会弹出提示：
+
+To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code NFXKBK8ZE to authenticate.
+
+
+直接访问链接，然后复制对应的code到浏览器中。
+
+登陆即可。
+
+然后终端会进入一个可交互的界面，
+
+这时候直接输入 `shared`,查看共享文件夹。
+
+
+```
+请输入命令: shared
+
+=== 共享项目 ===
+
+  1. 📂 文件夹 wesoundeffects (由 未知用户 共享)
+  2. 📂 文件夹 audiocaps (由 未知用户 共享)
+  3. 📂 文件夹 CLAP_audio_dataset (由 未知用户 共享)
+
+操作:
+  cd <编号> - 进入文件夹或共享项目
+  cd .. - 返回上一级
+  shared - 查看共享项目
+  home - 返回个人根目录
+  path - 显示当前完整路径
+  download - 下载当前文件夹
+  exit - 退出浏览器
+
+```
+
+输入 `cd 3`
+
+可以看到：
+
+```
+请输入命令: cd 3
+
+=== 共享项目: CLAP_audio_dataset ===
+
+文件夹:
+  1. 📂 BBCSoundEffects
+  2. 📂 Clotho
+  3. 📂 ClothoAQA
+  4. 📂 ESC50_1
+  5. 📂 ESC50_2
+  6. 📂 ESC50_3
+  7. 📂 ESC50_4
+  8. 📂 ESC50_5
+  9. 📂 EmoV_DB
+  10. 📂 Jamendo_16bit
+  11. 📂 Knocking_sounds
+  12. 📂 MACS
+  13. 📂 Urbansound8K
+  14. 📂 VGGSound
+  15. 📂 WavText5K
+  16. 📂 audiocaps
+  17. 📂 audioset_strong
+  18. 📂 audioset_t5_debiased
+  19. 📂 audioset_wavcaps
+  20. 📂 audiostock
+  21. 📂 audiostock-train-250k
+  22. 📂 audiostock_250k
+  23. 📂 bbcsoundeffects_wavcaps
+  24. 📂 epidemic_sound_effects
+  25. 📂 epidemic_sound_effects_t5_debiased
+  26. 📂 esc50
+  27. 📂 esc50_no_overlap
+  28. 📂 free_to_use_sounds
+  29. 📂 genius_16bit_128
+  30. 📂 juno_16bit
+  31. 📂 paramount_motion
+  32. 📂 sonniss_game_effect
+  33. 📂 sonniss_game_effects
+  34. 📂 synth_instructions
+  35. 📂 wesoundeffects
+
+```
+
+这里列举了所有的项目，然后找到要下载的项目，cd进去，
+
+例如 `cd 31`
+
+可以看到以下画面
+```
+=== 共享项目: CLAP_audio_dataset/EmoV_DB ===
+
+文件夹:
+  1. 📂 test
+  2. 📂 train
+  3. 📂 valid
+
+文件:
+  (无文件)
+
+操作:
+  cd <编号> - 进入文件夹或共享项目
+  cd .. - 返回上一级
+  shared - 查看共享项目
+  home - 返回个人根目录
+  path - 显示当前完整路径
+  download - 下载当前文件夹
+  exit - 退出浏览器
+
+
+```
+
+然后输入 download即可
+```
+请输入命令: download
+
+要下载的共享文件夹信息:
+驱动器ID: b!mxLvO8_fT0WFEgKhZ6yFsfp19tyWN7ZAoE_IwT5dSt66L5RtyWF7TIFo9ewM8e4a
+项目ID: 01HVJG3GYS4VEGWJTQNFDYMKLTKZXJ7EQY
+请使用以下命令下载:
 python onedrive_downloader_shared.py
+然后输入驱动器ID和项目ID: b!mxLvO8_fT0WFEgKhZ6yFsfp19tyWN7ZAoE_IwT5dSt66L5RtyWF7TIFo9ewM8e4a 01HVJG3GYS4VEGWJTQNFDYMKLTKZXJ7EQY
+
 ```
-需要输入分享文件的ID（可以从浏览器里先看到）
+会告诉你用什么命令，然后对应的驱动器id和项目id，
 
-## 特色功能 ✨
+然后退出程序，运行
+python onedrive_downloader_shared.py
 
-1. 智能续传：如果下载中断了，重新运行就会自动跳过已下载的文件
-2. 进度显示：下载时会显示进度条和文件大小
-3. 令牌缓存：登录一次后，下次就不用重新登录了
-4. 支持大文件：不管多大的文件都能下载
-5. 文件夹递归：可以一次性下载整个文件夹，包括所有子文件夹
+然后输入2
 
-## 注意事项 ⚠️
+```
+(base) root@autodl-container-322649a1f3-69f8bbcd:~/autodl-tmp/one_drive/onedrive_download# python onedrive_downloader_shared.py
+请输入共享项目的信息:
+1. 只输入项目ID
+2. 输入驱动器ID和项目ID
+请选择输入方式 (1/2): b!mxLvO8_fT0WFEgKhZ6yFsfp19tyWN7ZAoE_IwT5dSt66L5RtyWF7TIFo9ewM8e4a
+无效的选择
+(base) root@autodl-container-322649a1f3-69f8bbcd:~/autodl-tmp/one_drive/onedrive_download# python onedrive_downloader_shared.py
+请输入共享项目的信息:
+1. 只输入项目ID
+2. 输入驱动器ID和项目ID
+请选择输入方式 (1/2): 2
+请输入驱动器ID: b!mxLvO8_fT0WFEgKhZ6yFsfp19tyWN7ZAoE_IwT5dSt66L5RtyWF7TIFo9ewM8e4a
+请输入项目ID: 01HVJG3G6TO3PQXJAPGZD36OIWYWMW36YB
+正在处理共享项目: WavText5K (驱动器ID: b!mxLvO8_fT0WFEgKhZ6yFsfp19tyWN7ZAoE_IwT5dSt66L5RtyWF7TIFo9ewM8e4a, 项目ID: 01HVJG3G6TO3PQXJAPGZD36OIWYWMW36YB)
+正在处理共享项目: test (驱动器ID: b!mxLvO8_fT0WFEgKhZ6yFsfp19tyWN7ZAoE_IwT5dSt66L5RtyWF7TIFo9ewM8e4a, 项目ID: 01HVJG3GZMNGXARPJS3FGJWP67ICBROF2G)
+正在下载: 0.tar (470.45 MB)
+```
 
-1. 第一次使用时需要登录Microsoft账号授权
-2. 下载的文件会保存在`downloads`文件夹里
-3. 如果遇到下载错误，可以重试，已下载的文件不会重复下载
-4. 分享文件下载需要知道文件ID，可以先用浏览器查看
 
-## 遇到问题？🤔
+把对应的驱动id和项目id输入进去，就会开始下载。
 
-常见问题：
-1. 如果显示"无法获取访问令牌"，检查一下你的`.env`文件配置是否正确
-2. 如果下载很慢，可能是网络问题，重试就好
-3. 如果显示"API请求失败"，可能是权限不够，检查一下是不是有权限访问这个文件
+下载好以后，将主目录下的：
+step1
+step2
+step3
+复制到数据目录下，也就是放到和train test valid同一个目录。
 
-希望这个说明对你有帮助！如果还有不明白的地方，随时问我！😊
+然后step1，直接run
+python step1_unzip.py
+
+然后step2需要改一下，需要问ai，把step2的代码和任意一个train data里的json文件交给ai，然后问它：
+
+```
+解析出来的parquet包含哪几个字段？
+
+{"text": "OUTLAND Places - Orgallone - Loop 019", "original_data": {"file_path": "/mnt/audio_clip/dataset_creation/raw_datasets/wesoundeffects/WeSoundEffects/Thibault Rouslet/Outland Places Orgallone/OUTLAND Places - Orgallone - Loop 019.wav"}}
+
+这是我现在的json，请问当前代码能够正确解析吗？保持parquet的字段不变，
+
+```
+
+如果不能正确解析，让ai修改后返回完整代码即可。应该一次性能输出正确的代码。
+
+然后直接run 
+
+nohup step2_generate_parquet.py
+
+这一步完成以后，找到非鱼子要accesstoken
+
+
+然后登陆huggingface， 
+输入命令：
+
+```bash
+huggingface-cli login
+```
+
+输入完成后，再执行
+
+nohup step3_upload_data.py
+
