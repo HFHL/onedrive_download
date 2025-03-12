@@ -6,11 +6,7 @@ load_dotenv()
 
 # Microsoft Azure应用程序凭据
 CLIENT_ID = os.getenv("CLIENT_ID")  # 应用程序(客户端)ID
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")  # 客户端密钥
 TENANT_ID = os.getenv("TENANT_ID")  # 租户ID
-
-# 重定向URI
-REDIRECT_URI = os.getenv("REDIRECT_URI")  # 重定向URI
 
 # Microsoft Graph API端点
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
