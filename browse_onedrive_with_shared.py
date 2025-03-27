@@ -5,14 +5,18 @@ import os
 import json
 import requests
 import time
+import sys
 from msal import PublicClientApplication, SerializableTokenCache
 from config import (
     CLIENT_ID, AUTHORITY, SCOPE, 
     DOWNLOAD_PATH, TOKEN_CACHE_FILE
 )
 
-class OneDriveBrowser:
+class OneDriveSharedBrowser:
     def __init__(self):
+        # 创建下载目录
+        os.makedirs(DOWNLOAD_PATH, exist_ok=True)
+        
         # 初始化令牌缓存
         self.token_cache = SerializableTokenCache()
         if os.path.exists(TOKEN_CACHE_FILE):
@@ -84,40 +88,191 @@ class OneDriveBrowser:
             print(response.text)
             return None
     
-    def list_items(self, folder_path, is_shared_item=False, shared_item_id=None, remote_item=None):
-        """列出指定文件夹中的所有项目"""
-        if remote_item:
-            # 如果是remoteItem类型的共享项目
-            drive_id = remote_item.get("parentReference", {}).get("driveId")
-            item_id = remote_item.get("id")
-            
-            if drive_id and item_id:
-                endpoint = f"/drives/{drive_id}/items/{item_id}/children"
-            else:
-                print("无法获取共享项目的驱动器ID或项目ID")
-                return None
-        elif is_shared_item and shared_item_id:
-            # 如果是共享项目，使用项目ID访问
-            endpoint = f"/me/drive/items/{shared_item_id}/children"
-        elif folder_path.startswith("/"):
-            folder_path = folder_path[1:]
-            
-            if folder_path:
-                endpoint = f"/me/drive/root:/{folder_path}:/children"
-            else:
-                endpoint = "/me/drive/root/children"
-        else:
-            if folder_path:
-                endpoint = f"/me/drive/root:/{folder_path}:/children"
-            else:
-                endpoint = "/me/drive/root/children"
-        
-        return self._make_api_request(endpoint)
-    
     def list_shared_items(self):
         """列出所有共享项目"""
         endpoint = "/me/drive/sharedWithMe"
         return self._make_api_request(endpoint)
+    
+    def list_items(self, item_id, drive_id=None):
+        """列出指定项目中的所有子项目"""
+        if drive_id:
+            # 如果提供了驱动器ID，使用drives端点
+            endpoint = f"/drives/{drive_id}/items/{item_id}/children"
+        else:
+            # 否则使用默认驱动器
+            endpoint = f"/me/drive/items/{item_id}/children"
+        return self._make_api_request(endpoint)
+    
+    def get_item_info(self, item_id, drive_id=None):
+        """获取项目信息"""
+        if drive_id:
+            # 如果提供了驱动器ID，使用drives端点
+            endpoint = f"/drives/{drive_id}/items/{item_id}"
+        else:
+            # 否则使用默认驱动器
+            endpoint = f"/me/drive/items/{item_id}"
+        return self._make_api_request(endpoint)
+    
+    def browse_directory(self, item_id=None, drive_id=None, path=""):
+        """浏览目录并显示文件和文件夹数量"""
+        if item_id is None:
+            # 如果没有指定item_id，则浏览共享根目录
+            print("\n浏览OneDrive共享项目")
+            shared_items = self.list_shared_items()
+            if not shared_items or "value" not in shared_items:
+                print("无法获取共享项目列表")
+                return
+            
+            full_path = "共享项目"
+            print(f"\n当前目录: {full_path}")
+            
+            # 获取共享项目数量
+            items = shared_items["value"]
+            folders = [item for item in items if item.get("remoteItem", {}).get("folder")]
+            files = [item for item in items if not item.get("remoteItem", {}).get("folder")]
+            
+            folder_count = len(folders)
+            file_count = len(files)
+            
+            print(f"该目录包含 {folder_count} 个文件夹和 {file_count} 个文件")
+            
+            # 显示所有文件夹
+            if folder_count > 0:
+                print("\n文件夹:")
+                for idx, folder in enumerate(folders, 1):
+                    print(f"  {idx}. {folder['name']}")
+            
+            # 显示所有文件
+            if file_count > 0:
+                print("\n文件:")
+                for idx, file in enumerate(files, 1):
+                    remote_item = file.get("remoteItem", {})
+                    size = remote_item.get("size", "未知大小")
+                    if isinstance(size, (int, float)):
+                        size = self._format_size(size)
+                    print(f"  {idx}. {file['name']} ({size})")
+        else:
+            # 获取指定项目信息
+            item_info = self.get_item_info(item_id, drive_id)
+            if not item_info:
+                print(f"无法获取项目信息: {item_id}")
+                return
+            
+            item_name = item_info.get("name", "未命名项目")
+            full_path = f"{path}/{item_name}" if path else item_name
+            
+            # 获取子项目
+            items_result = self.list_items(item_id, drive_id)
+            if not items_result or "value" not in items_result:
+                print(f"无法获取项目内容: {item_id}")
+                return
+            
+            print(f"\n当前目录: {full_path}")
+            
+            # 计算文件和文件夹数量
+            items = items_result["value"]
+            folders = [item for item in items if item.get("folder")]
+            files = [item for item in items if not item.get("folder")]
+            
+            folder_count = len(folders)
+            file_count = len(files)
+            
+            print(f"该目录包含 {folder_count} 个文件夹和 {file_count} 个文件")
+            
+            # 显示所有文件夹
+            if folder_count > 0:
+                print("\n文件夹:")
+                for idx, folder in enumerate(folders, 1):
+                    print(f"  {idx}. {folder['name']}")
+            
+            # 显示所有文件
+            if file_count > 0:
+                print("\n文件:")
+                for idx, file in enumerate(files, 1):
+                    size = file.get("size", "未知大小")
+                    if isinstance(size, (int, float)):
+                        size = self._format_size(size)
+                    print(f"  {idx}. {file['name']} ({size})")
+
+        # 模拟终端提示符和命令处理
+        while True:
+            command = input(f"\n{full_path}> ").strip()
+            
+            if not command:
+                continue
+                
+            cmd_parts = command.split()
+            cmd = cmd_parts[0].lower()
+            
+            if cmd == "help" or cmd == "?":
+                print("\n可用命令:")
+                print("  ls             - 列出当前目录内容")
+                print("  cd <序号>       - 进入指定序号的文件夹")
+                print("  cd ..          - 返回上级目录")
+                print("  exit/quit      - 退出程序")
+                print("  help/?         - 显示帮助信息")
+                
+            elif cmd == "ls":
+                # 重新显示当前目录内容
+                print(f"该目录包含 {folder_count} 个文件夹和 {file_count} 个文件")
+                
+                if folder_count > 0:
+                    print("\n文件夹:")
+                    for idx, folder in enumerate(folders, 1):
+                        print(f"  {idx}. {folder['name']}")
+                
+                if file_count > 0:
+                    print("\n文件:")
+                    for idx, file in enumerate(files, 1):
+                        if item_id is None:  # 在根目录
+                            remote_item = file.get("remoteItem", {})
+                            size = remote_item.get("size", "未知大小")
+                        else:
+                            size = file.get("size", "未知大小")
+                        if isinstance(size, (int, float)):
+                            size = self._format_size(size)
+                        print(f"  {idx}. {file['name']} ({size})")
+                
+            elif cmd == "cd":
+                if len(cmd_parts) < 2:
+                    print("请指定要进入的文件夹序号或 '..' 返回上级")
+                    continue
+                    
+                if cmd_parts[1] == "..":
+                    # 返回上级目录
+                    if item_id is not None:  # 只有非根目录可以返回
+                        return
+                    else:
+                        print("已在根目录，无法返回上级")
+                else:
+                    # 尝试解析序号并进入子文件夹
+                    try:
+                        folder_idx = int(cmd_parts[1]) - 1
+                        if 0 <= folder_idx < folder_count:
+                            selected_folder = folders[folder_idx]
+                            
+                            # 处理共享项目和常规项目的区别
+                            if item_id is None:  # 在根目录
+                                remote_item = selected_folder.get("remoteItem", {})
+                                subfolder_id = remote_item.get("id", selected_folder.get("id"))
+                                subfolder_drive_id = remote_item.get("parentReference", {}).get("driveId")
+                            else:  # 在子目录
+                                subfolder_id = selected_folder["id"]
+                                subfolder_drive_id = selected_folder.get("parentReference", {}).get("driveId", drive_id)
+                            
+                            self.browse_directory(subfolder_id, subfolder_drive_id, full_path)
+                        else:
+                            print("无效的文件夹序号")
+                    except ValueError:
+                        print("请输入有效的数字或 '..'")
+                
+            elif cmd == "exit" or cmd == "quit":
+                print("退出程序")
+                sys.exit(0)
+                
+            else:
+                print(f"未知命令: {cmd}")
+                print("输入 'help' 或 '?' 获取帮助")
     
     def _format_size(self, size_bytes):
         """格式化文件大小"""
@@ -129,264 +284,18 @@ class OneDriveBrowser:
                 return f"{size_bytes:.2f} {unit}"
             size_bytes /= 1024.0
         return f"{size_bytes:.2f} PB"
-    
-    def browse_folder(self, folder_path=""):
-        """浏览文件夹内容"""
-        current_path = folder_path
-        is_in_shared_items = False
-        current_shared_item_id = None
-        current_remote_item = None
-        shared_items_cache = []
-        
-        while True:
-            if is_in_shared_items and current_shared_item_id is None and current_remote_item is None:
-                # 显示共享项目列表
-                print("\n=== 共享项目 ===\n")
-                
-                if not shared_items_cache:
-                    shared_items = self.list_shared_items()
-                    if shared_items and "value" in shared_items:
-                        shared_items_cache = shared_items["value"]
-                    else:
-                        shared_items_cache = []
-                
-                if not shared_items_cache:
-                    print("没有共享项目")
-                    is_in_shared_items = False
-                    current_path = ""
-                    continue
-                
-                # 显示共享项目
-                for i, item in enumerate(shared_items_cache):
-                    name = item.get("name", "未命名项目")
-                    remote_item = item.get("remoteItem", {})
-                    
-                    # 尝试获取共享者信息
-                    if remote_item and "shared" in remote_item:
-                        shared_by = remote_item.get("shared", {}).get("owner", {}).get("user", {}).get("displayName", "未知用户")
-                    else:
-                        shared_by = "未知用户"
-                    
-                    # 确定项目类型
-                    if remote_item and "folder" in remote_item:
-                        item_type = "📂 文件夹"
-                    elif "folder" in item:
-                        item_type = "📂 文件夹"
-                    else:
-                        item_type = "📄 文件"
-                    
-                    print(f"  {i+1}. {item_type} {name} (由 {shared_by} 共享)")
-            else:
-                # 显示普通文件夹内容
-                if is_in_shared_items:
-                    print(f"\n=== 共享项目: {current_path or '根目录'} ===\n")
-                else:
-                    print(f"\n=== 当前位置: {current_path or '根目录'} ===\n")
-                
-                items = self.list_items(current_path, is_in_shared_items, current_shared_item_id, current_remote_item)
-                
-                if not items or "value" not in items:
-                    print("⚠️ 无法获取文件夹内容")
-                    input("按Enter键返回上一级...")
-                    
-                    # 返回上一级目录
-                    if is_in_shared_items:
-                        if current_shared_item_id or current_remote_item:
-                            current_shared_item_id = None
-                            current_remote_item = None
-                        else:
-                            is_in_shared_items = False
-                    elif "/" in current_path:
-                        current_path = current_path.rsplit("/", 1)[0]
-                    else:
-                        current_path = ""
-                    continue
-                
-                # 整理文件夹和文件
-                folders = []
-                files = []
-                
-                for item in items["value"]:
-                    if item.get("folder"):
-                        folders.append(item)
-                    else:
-                        files.append(item)
-                
-                # 显示文件夹
-                print("文件夹:")
-                if not folders:
-                    print("  (无文件夹)")
-                else:
-                    for i, folder in enumerate(sorted(folders, key=lambda x: x["name"])):
-                        print(f"  {i+1}. 📂 {folder['name']}")
-                
-                # 显示文件
-                print("\n文件:")
-                if not files:
-                    print("  (无文件)")
-                else:
-                    for i, file in enumerate(sorted(files, key=lambda x: x["name"])):
-                        size = file.get("size", None)
-                        print(f"  {i+1}. 📄 {file['name']} ({self._format_size(size)})")
-            
-            # 用户操作
-            print("\n操作:")
-            print("  cd <编号> - 进入文件夹或共享项目")
-            print("  cd .. - 返回上一级")
-            print("  shared - 查看共享项目")
-            print("  home - 返回个人根目录")
-            print("  path - 显示当前完整路径")
-            print("  download - 下载当前文件夹")
-            print("  exit - 退出浏览器")
-            
-            choice = input("\n请输入命令: ").strip()
-            
-            if choice.lower() == "exit":
-                break
-            elif choice.lower() == "path":
-                if is_in_shared_items:
-                    if current_shared_item_id or current_remote_item:
-                        print(f"\n共享项目路径: {current_path}")
-                        if current_remote_item:
-                            drive_id = current_remote_item.get("parentReference", {}).get("driveId", "未知")
-                            item_id = current_remote_item.get("id", "未知")
-                            print(f"驱动器ID: {drive_id}")
-                            print(f"项目ID: {item_id}")
-                        else:
-                            print(f"项目ID: {current_shared_item_id}")
-                        print("注意: 这是共享项目中的路径，下载时需要使用特殊格式")
-                    else:
-                        print("\n当前位置: 共享项目列表")
-                else:
-                    print(f"\n完整路径: {current_path}")
-                input("按Enter键继续...")
-            elif choice.lower() == "shared":
-                is_in_shared_items = True
-                current_shared_item_id = None
-                current_remote_item = None
-                current_path = ""
-            elif choice.lower() == "home":
-                is_in_shared_items = False
-                current_shared_item_id = None
-                current_remote_item = None
-                current_path = ""
-            elif choice.lower() == "download":
-                if is_in_shared_items:
-                    if current_remote_item:
-                        drive_id = current_remote_item.get("parentReference", {}).get("driveId")
-                        item_id = current_remote_item.get("id")
-                        print(f"\n要下载的共享文件夹信息:")
-                        print(f"驱动器ID: {drive_id}")
-                        print(f"项目ID: {item_id}")
-                        print("请使用以下命令下载:")
-                        print(f"python onedrive_downloader_shared.py")
-                        print(f"然后输入驱动器ID和项目ID: {drive_id} {item_id}")
-                    elif current_shared_item_id:
-                        print(f"\n要下载的共享文件夹ID: {current_shared_item_id}")
-                        print("请使用以下命令下载:")
-                        print(f"python onedrive_downloader_shared.py")
-                        print(f"然后输入共享项目ID: {current_shared_item_id}")
-                    else:
-                        print("\n请先选择一个共享项目")
-                else:
-                    print(f"\n要下载的文件夹路径: {current_path}")
-                    print("请使用以下命令下载:")
-                    print(f"python onedrive_downloader.py")
-                    print(f"然后输入: {current_path}")
-                input("按Enter键继续...")
-            elif choice.lower() == "cd ..":
-                # 返回上一级目录
-                if is_in_shared_items:
-                    if current_shared_item_id or current_remote_item:
-                        current_shared_item_id = None
-                        current_remote_item = None
-                        current_path = ""
-                    else:
-                        is_in_shared_items = False
-                elif "/" in current_path:
-                    current_path = current_path.rsplit("/", 1)[0]
-                else:
-                    current_path = ""
-            elif choice.lower().startswith("cd "):
-                try:
-                    item_index = int(choice[3:].strip()) - 1
-                    
-                    if is_in_shared_items and current_shared_item_id is None and current_remote_item is None:
-                        # 选择共享项目
-                        if 0 <= item_index < len(shared_items_cache):
-                            selected_item = shared_items_cache[item_index]
-                            
-                            # 检查是否是remoteItem类型
-                            if "remoteItem" in selected_item:
-                                current_remote_item = selected_item["remoteItem"]
-                                current_shared_item_id = None
-                            else:
-                                current_shared_item_id = selected_item.get("id")
-                                current_remote_item = None
-                                
-                            current_path = selected_item.get("name", "")
-                        else:
-                            print("无效的项目编号")
-                            input("按Enter键继续...")
-                    else:
-                        # 选择普通文件夹
-                        if not folders:
-                            print("当前目录下没有文件夹")
-                            input("按Enter键继续...")
-                            continue
-                            
-                        # 获取排序后的文件夹列表
-                        sorted_folders = sorted(folders, key=lambda x: x["name"])
-                        folders_count = len(sorted_folders)
-                        
-                        if item_index >= folders_count:
-                            print(f"错误：找不到编号 {item_index + 1} 的文件夹")
-                            print(f"当前文件夹数量为: {folders_count}")
-                            input("按Enter键继续...")
-                        elif 0 <= item_index < folders_count:
-                            selected_folder = sorted_folders[item_index]
-                            folder_name = selected_folder["name"]
-                            folder_id = selected_folder["id"]
-                            
-                            if is_in_shared_items:
-                                # 在共享项目中导航
-                                if current_remote_item:
-                                    # 如果当前是remoteItem，则更新remoteItem
-                                    if "remoteItem" in selected_folder:
-                                        current_remote_item = selected_folder["remoteItem"]
-                                    else:
-                                        current_remote_item = selected_folder
-                                else:
-                                    # 否则更新shared_item_id
-                                    current_shared_item_id = folder_id
-                                
-                                if current_path:
-                                    current_path = f"{current_path}/{folder_name}"
-                                else:
-                                    current_path = folder_name
-                            else:
-                                # 在个人OneDrive中导航
-                                if current_path:
-                                    current_path = f"{current_path}/{folder_name}"
-                                else:
-                                    current_path = folder_name
-                        else:
-                            print("无效的文件夹编号")
-                            input("按Enter键继续...")
-                except ValueError:
-                    print("无效的命令格式")
-                    input("按Enter键继续...")
-            else:
-                print("无效的命令")
-                input("按Enter键继续...")
 
 def main():
     try:
-        browser = OneDriveBrowser()
-        browser.browse_folder()
+        browser = OneDriveSharedBrowser()
+        
+        # 从共享根目录开始浏览，而不是直接进入指定目录
+        browser.browse_directory()
         
     except Exception as e:
         print(f"发生错误: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main() 

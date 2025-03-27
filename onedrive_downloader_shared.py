@@ -235,7 +235,7 @@ def main():
         
         # 在这里直接设置驱动器ID和项目ID
         drive_id = "b!mxLvO8_fT0WFEgKhZ6yFsfp19tyWN7ZAoE_IwT5dSt66L5RtyWF7TIFo9ewM8e4a"
-        item_id = "01HVJG3GZDNHA4JPPO7FFKWKBOTBA22VU2"
+        item_id = "01HVJG3G4BE4AKQZ7CGRGZVOXZTPIGS436"
         
         # 验证项目ID
         item_info = downloader.get_item_info(item_id, drive_id)
